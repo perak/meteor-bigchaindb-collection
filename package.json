@@ -1,0 +1,30 @@
+{
+  "name": "meteor-bigchaindb-collection",
+  "version": "1.0.0",
+  "description": "Use BigchainDB in your Meteor application just like you are using Mongo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel source --presets babel-preset-es2015 --out-dir ./",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/perak/meteor-bigchaindb-collection.git"
+  },
+  "keywords": [
+    "meteor",
+    "bigchaindb",
+    "blockchain",
+    "mongo"
+  ],
+  "author": "Petar Korponaić",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/perak/meteor-bigchaindb-collection/issues"
+  },
+  "homepage": "https://github.com/perak/meteor-bigchaindb-collection#readme",
+  "dependencies": {
+    "bigchaindb-driver": "^3.2.0"
+  }
+}
