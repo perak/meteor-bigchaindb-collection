@@ -36,9 +36,9 @@ var BDBConnection = exports.BDBConnection = function () {
 			this.socket = null;
 
 			this.options = {
-				url: options.url || "",
-				eventsUrl: options.eventsUrl || "",
-				namespace: options.namespace || ""
+				url: options ? options.url || "" : "",
+				eventsUrl: options ? options.eventsUrl || "" : "",
+				namespace: options ? options.namespace || "" : ""
 			};
 
 			this.connection = null;
@@ -52,6 +52,15 @@ var BDBConnection = exports.BDBConnection = function () {
 
 			if (options) {
 				this._init(options);
+			}
+
+			if (!this.options.url) {
+				var errorMsg = "ERROR: BigchainDB API URL is not set.";
+				if (cb) {
+					cb(new Error(errorMsg));
+				} else {
+					console.log(errorMsg);
+				}
 			}
 
 			this.connection = new BDBDriver.Connection(this.options.url);
