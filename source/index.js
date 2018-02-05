@@ -10,9 +10,9 @@ export class BDBConnection {
 		this.socket = null;
 
 		this.options = {
-			url: options.url || "",
-			eventsUrl: options.eventsUrl || "",
-			namespace: options.namespace || ""
+			url: options ? options.url || "" : "",
+			eventsUrl: options ? options.eventsUrl || "" : "",
+			namespace: options ? options.namespace || "" : ""
 		};
 
 		this.connection = null;
@@ -22,6 +22,15 @@ export class BDBConnection {
 	connect(options = {}, cb) {
 		if(options) {
 			this._init(options);
+		}
+
+		if(!this.options.url) {
+			let errorMsg = "ERROR: BigchainDB API URL is not set.";
+			if(cb) {
+				cb(new Error(errorMsg));
+			} else {
+				console.log(errorMsg);
+			}
 		}
 
 		this.connection = new BDBDriver.Connection(this.options.url);
