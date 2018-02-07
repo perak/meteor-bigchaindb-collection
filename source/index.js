@@ -3,6 +3,9 @@ const WebSocket = require("ws");
 
 export class BDBConnection {
 	constructor(options = {}) {
+		this.collections = {};
+		this.transactionCallbacks = [];
+
 		this._init(options);
 	}
 
@@ -12,11 +15,12 @@ export class BDBConnection {
 		this.options = {
 			url: options ? options.url || "" : "",
 			eventsUrl: options ? options.eventsUrl || "" : "",
-			namespace: options ? options.namespace || "" : ""
+			namespace: options ? options.namespace || "" : "",
+			appId: options ? options.appId || "" : "",
+			appKey: options ? options.appKey || "" : ""
 		};
 
 		this.connection = null;
-		this.collections = {};
 	}
 
 	connect(options = {}, cb) {
@@ -33,7 +37,15 @@ export class BDBConnection {
 			}
 		}
 
-		this.connection = new BDBDriver.Connection(this.options.url);
+		var headers = {};
+		if(this.options.appId) {
+			headers.app_id = this.options.appId;
+		}
+		if(this.options.appKey) {
+			headers.app_key = this.options.appKey;
+		}
+
+		this.connection = new BDBDriver.Connection(this.options.url, headers);
 
 		if(this.options.eventsUrl) {
 			this.listenEvents(cb);
@@ -103,6 +115,10 @@ export class BDBConnection {
 						}
 					}
 				}
+
+				self.transactionCallbacks.map(function(transactionCallback) {
+					transactionCallback(data, trans);
+				});
 			}));
 		});
 
@@ -116,6 +132,32 @@ export class BDBConnection {
 		this.socket.onclose = function(e) {
 			console.log("BigchainDB WebSocket connection closed. Code: " + e.code + ", reason: \"" + e.reason + "\".", e.code, e.reason);
 		};
+	}
+
+	createTransaction(data, publicKey, privateKey, cb) {
+		let self = this;
+		const tx = BDBDriver.Transaction.makeCreateTransaction(
+			data,
+			null,
+			[
+				BDBDriver.Transaction.makeOutput(BDBDriver.Transaction.makeEd25519Condition(publicKey))
+			],
+			publicKey
+		);
+
+		const txSigned = BDBDriver.Transaction.signTransaction(tx, privateKey);
+
+		self.connection.postTransaction(txSigned).then(() => {
+			self.connection.pollStatusAndFetchTransaction(txSigned.id).then((retrievedTx) => {
+				if(cb) {
+					cb(retrievedTx);
+				}
+			});
+		});
+	}
+
+	onTransaction(cb) {
+		this.transactionCallbacks.push(cb);
 	}
 };
 

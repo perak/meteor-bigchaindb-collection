@@ -25,6 +25,9 @@ var BDBConnection = exports.BDBConnection = function () {
 
 		_classCallCheck(this, BDBConnection);
 
+		this.collections = {};
+		this.transactionCallbacks = [];
+
 		this._init(options);
 	}
 
@@ -38,11 +41,12 @@ var BDBConnection = exports.BDBConnection = function () {
 			this.options = {
 				url: options ? options.url || "" : "",
 				eventsUrl: options ? options.eventsUrl || "" : "",
-				namespace: options ? options.namespace || "" : ""
+				namespace: options ? options.namespace || "" : "",
+				appId: options ? options.appId || "" : "",
+				appKey: options ? options.appKey || "" : ""
 			};
 
 			this.connection = null;
-			this.collections = {};
 		}
 	}, {
 		key: "connect",
@@ -63,7 +67,15 @@ var BDBConnection = exports.BDBConnection = function () {
 				}
 			}
 
-			this.connection = new BDBDriver.Connection(this.options.url);
+			var headers = {};
+			if (this.options.appId) {
+				headers.app_id = this.options.appId;
+			}
+			if (this.options.appKey) {
+				headers.app_key = this.options.appKey;
+			}
+
+			this.connection = new BDBDriver.Connection(this.options.url, headers);
 
 			if (this.options.eventsUrl) {
 				this.listenEvents(cb);
@@ -135,6 +147,10 @@ var BDBConnection = exports.BDBConnection = function () {
 							}
 						}
 					}
+
+					self.transactionCallbacks.map(function (transactionCallback) {
+						transactionCallback(data, trans);
+					});
 				}));
 			});
 
@@ -147,6 +163,27 @@ var BDBConnection = exports.BDBConnection = function () {
 			this.socket.onclose = function (e) {
 				console.log("BigchainDB WebSocket connection closed. Code: " + e.code + ", reason: \"" + e.reason + "\".", e.code, e.reason);
 			};
+		}
+	}, {
+		key: "createTransaction",
+		value: function createTransaction(data, publicKey, privateKey, cb) {
+			var self = this;
+			var tx = BDBDriver.Transaction.makeCreateTransaction(data, null, [BDBDriver.Transaction.makeOutput(BDBDriver.Transaction.makeEd25519Condition(publicKey))], publicKey);
+
+			var txSigned = BDBDriver.Transaction.signTransaction(tx, privateKey);
+
+			self.connection.postTransaction(txSigned).then(function () {
+				self.connection.pollStatusAndFetchTransaction(txSigned.id).then(function (retrievedTx) {
+					if (cb) {
+						cb(retrievedTx);
+					}
+				});
+			});
+		}
+	}, {
+		key: "onTransaction",
+		value: function onTransaction(cb) {
+			this.transactionCallbacks.push(cb);
 		}
 	}]);
 
