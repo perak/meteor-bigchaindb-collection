@@ -1,6 +1,6 @@
 {
   "name": "meteor-bigchaindb-collection",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Use BigchainDB in your Meteor application just like you are using Mongo",
   "main": "index.js",
   "scripts": {
