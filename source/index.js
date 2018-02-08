@@ -1,5 +1,6 @@
 const BDBDriver = require("bigchaindb-driver");
 const WebSocket = require("ws");
+const bip39 = require("bip39");
 
 export class BDBConnection {
 	constructor(options = {}) {
@@ -132,6 +133,10 @@ export class BDBConnection {
 		this.socket.onclose = function(e) {
 			console.log("BigchainDB WebSocket connection closed. Code: " + e.code + ", reason: \"" + e.reason + "\".", e.code, e.reason);
 		};
+	}
+
+	keypairFromPassword(password) {
+		return new BDBDriver.Ed25519Keypair(bip39.mnemonicToSeed(password).slice(0, 32));
 	}
 
 	createTransaction(data, publicKey, privateKey, cb) {
