@@ -220,7 +220,6 @@ var BDBCollection = exports.BDBCollection = function (_Mongo$Collection) {
 			var options = arguments.length <= 2 || arguments[2] === undefined ? { publicKey: "", privateKey: "" } : arguments[2];
 
 			var self = this;
-
 			if (Meteor.isServer && this.bdbConnection) {
 				var _ret = function () {
 					if (doc._transactionId) {

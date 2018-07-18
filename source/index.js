@@ -176,7 +176,6 @@ export class BDBCollection extends Mongo.Collection {
 
 	insert(doc, callback, options = { publicKey: "", privateKey: "" }) {
 		let self = this;
-
 		if(Meteor.isServer && this.bdbConnection) {
 			if(doc._transactionId) {
 				return super.insert.apply(this, arguments);
